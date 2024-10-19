@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Meter Troubleshooting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #1e1e1e;
+        }
+        h1, h2 {
+            color: #ffffff;
+        }
+        .card {
+            background-color: #c9c3a1;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .steps {
+            display: none;
+        }
+        .step-active {
+            display: block;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        .input-section label {
+            font-weight: bold;
+        }
+        .input-section select, .input-section input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .button {
+            background-color: #338fcc;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background-color: #4e3c04;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+        /* Step 2 background color */
+        #step-2 {
+            background-color: #c9c3a1; /* light yellow */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Smart Meter Troubleshooting Guide</h1>
+
+    <!-- Step 1: Select Meter Type -->
+    <div id="step-1" class="card steps step-active">
+        <h2>Step 1: Select the Meter Type</h2>
+        <div class="input-section">
+            <label for="meterBrand">Select Meter Brand:</label>
+            <select id="meterBrand" onchange="showPhaseOptions()">
+                <option value="" disabled selected>Select Brand</option>
+                <option value="HPL">HPL</option>
+                <option value="GENUS">GENUS</option>
+            </select>
+        </div>
+        <div class="input-section" id="phaseSelection" style="display: none;">
+            <label for="meterPhase">Select Meter Phase:</label>
+            <select id="meterPhase">
+                <option value="" disabled selected>Select Phase</option>
+                <option value="1-phase">Single Phase</option>
+                <option value="3-phase-wc">Three Phase (WC)</option>
+                <option value="3-phase-ltct">Three Phase (LTCT)</option>
+            </select>
+        </div>
+        <button class="button" onclick="goToStep(2)" id="nextStepButton" style="display: none;">Next</button>
+    </div>
+
+    <!-- Step 2: Meter Instructions -->
+    <div id="step-2" class="card steps">
+        <h2>Step 2: Meter Instructions</h2>
+        <p id="meterInstructions"></p>
+        <button class="button" onclick="goToStep(3)">Next</button>
+    </div>
+
+    <!-- Step 3: Check RSSI or Error Values -->
+    <div id="step-3" class="card steps">
+        <h2>Step 3: Check RSSI and NIC/Error Values</h2>
+        <div id="rssi-nic-input" class="input-section" style="display: none;">
+            <label for="rssi">Enter RSSI Value:</label>
+            <input type="number" id="rssi" placeholder="0-35">
+            <label for="nic">Enter NIC Value:</label>
+            <input type="number" id="nic" placeholder="1-10">
+        </div>
+        <div id="rssi-error-input" class="input-section" style="display: none;">
+            <label for="rssi">Enter RSSI Value:</label>
+            <input type="number" id="rssiError" placeholder="0-35">
+            <label for="error">Enter Error Value:</label>
+            <input type="number" id="error" placeholder="1-99">
+        </div>
+        <button class="button" onclick="checkValues()">Next</button>
+    </div>
+
+    <!-- Step 4: Provide Instructions -->
+    <div id="step-4" class="card steps">
+        <h2>Step 4: Troubleshooting Instructions</h2>
+        <p id="troubleshooting-instructions">Follow the instructions based on your input values.</p>
+        <button class="button" onclick="restart()">Restart Troubleshooting</button>
+    </div>
+
+    <script>
+        function showPhaseOptions() {
+            const brand = document.getElementById('meterBrand').value;
+            document.getElementById('phaseSelection').style.display = 'block';
+            document.getElementById('nextStepButton').style.display = 'block';
+        }
+
+        function goToStep(step) {
+            document.querySelectorAll('.steps').forEach(function (el) {
+                el.classList.remove('step-active');
+            });
+            document.getElementById('step-' + step).classList.add('step-active');
+
+            if (step === 2) {
+                const brand = document.getElementById('meterBrand').value;
+                const phase = document.getElementById('meterPhase').value;
+
+                let instructions = "";
+                // Set instructions based on meter brand and phase
+                if (brand === "HPL") {
+                    if (phase === "1-phase") {
+                        instructions = "Press the push button 56 times.";
+                    } else if (phase === "3-phase-wc" || phase === "3-phase-ltct") {
+                        instructions = "Press the push button 57 times.";
+                    }
+                } else if (brand === "GENUS") {
+                    instructions = "Hold the push button for 30 seconds and check for errors.";
+                }
+
+                document.getElementById('meterInstructions').innerText = instructions;
+            }
+
+            if (step === 3) {
+                const brand = document.getElementById('meterBrand').value;
+
+                // Show the appropriate input based on meter type
+                if (brand === "HPL") {
+                    document.getElementById('rssi-nic-input').style.display = 'block';
+                    document.getElementById('rssi-error-input').style.display = 'none';
+                } else if (brand === "GENUS") {
+                    document.getElementById('rssi-nic-input').style.display = 'none';
+                    document.getElementById('rssi-error-input').style.display = 'block';
+                }
+            }
+        }
+
+        function checkValues() {
+            const brand = document.getElementById('meterBrand').value;
+            let rssi, nicOrError;
+
+            if (brand === "HPL") {
+                rssi = parseInt(document.getElementById('rssi').value);
+                nicOrError = parseInt(document.getElementById('nic').value);
+            } else if (brand === "GENUS") {
+                rssi = parseInt(document.getElementById('rssiError').value);
+                nicOrError = parseInt(document.getElementById('error').value);
+            }
+
+            let instructions = "";
+
+            if (rssi === 0 && nicOrError > 0) {
+                instructions = "Reinsert NIC card after cleaning SIM. Wait 15 minutes and recheck values.";
+            } else if (rssi > 0 && nicOrError === 1) {
+                instructions = "Replace SIM with Jio or Airtel, reinsert NIC card, and wait 15 minutes.";
+            } else {
+                instructions = "If the meter still doesn't communicate, replace the NIC card or check the network.";
+            }
+
+            document.getElementById('troubleshooting-instructions').innerText = instructions;
+            goToStep(4);
+        }
+
+        function restart() {
+            document.getElementById('rssi').value = '';
+            document.getElementById('nic').value = '';
+            document.getElementById('rssiError').value = '';
+            document.getElementById('error').value = '';
+            goToStep(1); // Restart to Step 1
+        }
+    </script>
+
+</body>
+</html>
